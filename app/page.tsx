@@ -1,11 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface MathProblem {
   problem_text: string
   final_answer: number
   difficulty: 'easy' | 'medium' | 'hard'
+}
+
+interface SubmissionHistory {
+  id: string
+  created_at: string
+  user_answer: number
+  is_correct: boolean
+  feedback_text: string
+}
+
+interface ProblemHistoryEntry {
+  id: string
+  created_at: string
+  difficulty: MathProblem['difficulty']
+  problem_text: string
+  correct_answer: number
+  math_problem_submissions: SubmissionHistory[]
 }
 
 export default function Home() {
@@ -19,6 +36,9 @@ export default function Home() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<
     MathProblem['difficulty']
   >('medium')
+  const [history, setHistory] = useState<ProblemHistoryEntry[]>([])
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState('')
 
   const feedbackCardStyles =
     isCorrect === null
@@ -33,6 +53,33 @@ export default function Home() {
       : isCorrect
         ? '✅ Correct!'
         : '❌ Not quite right'
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      setIsHistoryLoading(true)
+      setHistoryError('')
+
+      const response = await fetch('/api/math-problem/history')
+      if (!response.ok) {
+        throw new Error('Request failed')
+      }
+
+      const data = (await response.json()) as {
+        sessions: ProblemHistoryEntry[]
+      }
+
+      setHistory(data.sessions ?? [])
+    } catch (error) {
+      console.error('Failed to load history:', error)
+      setHistoryError('Unable to load problem history.')
+    } finally {
+      setIsHistoryLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchHistory()
+  }, [fetchHistory])
 
   const generateProblem = async () => {
     try {
@@ -62,6 +109,7 @@ export default function Home() {
 
       setProblem(data.problem)
       setSessionId(data.sessionId)
+      fetchHistory()
     } catch (error) {
       console.error('Failed to generate problem:', error)
       setProblem(null)
@@ -106,6 +154,7 @@ export default function Home() {
       setIsCorrect(data.isCorrect)
       setFeedback(data.feedback)
       setUserAnswer('')
+      fetchHistory()
     } catch (error) {
       console.error('Failed to submit answer:', error)
       setIsCorrect(null)
@@ -199,6 +248,79 @@ export default function Home() {
             <p className="text-gray-800 leading-relaxed">{feedback}</p>
           </div>
         )}
+
+        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">
+            Problem history
+          </h2>
+
+          {historyError && (
+            <p className="text-sm text-red-600 mb-2">{historyError}</p>
+          )}
+
+          {isHistoryLoading ? (
+            <p className="text-gray-600">Loading history...</p>
+          ) : history.length === 0 ? (
+            <p className="text-gray-600">
+              No problems generated yet. Generate one to see it here.
+            </p>
+          ) : (
+            <ul className="space-y-4">
+              {history.map((entry) => {
+                const latestSubmission = entry.math_problem_submissions?.[0]
+                return (
+                  <li
+                    key={entry.id}
+                    className="border border-gray-200 rounded-lg p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+                        {entry.difficulty.toUpperCase()}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(entry.created_at).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-800 font-semibold mb-2">
+                      {entry.problem_text}
+                    </p>
+
+                    <p className="text-sm text-gray-600 mb-2">
+                      Correct answer: <span className="font-semibold">{entry.correct_answer}</span>
+                    </p>
+
+                    {latestSubmission ? (
+                      <div
+                        className={`text-sm ${
+                          latestSubmission.is_correct
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}
+                      >
+                        <p className="font-semibold">
+                          {latestSubmission.is_correct
+                            ? 'Answered correctly'
+                            : 'Answered incorrectly'}
+                        </p>
+                        <p className="text-gray-700">
+                          Your answer: {latestSubmission.user_answer}
+                        </p>
+                        <p className="text-gray-600 mt-1">
+                          {latestSubmission.feedback_text}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No submission yet.
+                      </p>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
       </main>
     </div>
   )
