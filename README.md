@@ -145,6 +145,7 @@ When submitting your assessment, provide:
 - Frontend wiring in `app/page.tsx` handles loading/error states, ties button actions to the API routes, and renders feedback with contextual styling.
 - Added selectable difficulty levels (Easy/Medium/Hard) that flow from the UI through the AI prompt to Supabase storage, ensuring repeatable problem difficulty control.
 - Implemented a problem history view that surfaces the 20 most recent sessions alongside submission outcomes for quick review.
+- Score tracking summary card keeps a live total of attempts, correct answers, and accuracy, backed by a dedicated API endpoint.
 
 ## Additional Features (Optional)
 
@@ -152,7 +153,7 @@ If you have time, consider adding:
 
 - [x] Difficulty levels (Easy/Medium/Hard)
 - [x] Problem history view
-- [ ] Score tracking
+- [x] Score tracking
 - [ ] Different problem types (addition, subtraction, multiplication, division)
 - [ ] Hints system
 - [ ] Step-by-step solution explanations

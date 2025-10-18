@@ -25,6 +25,12 @@ interface ProblemHistoryEntry {
   math_problem_submissions: SubmissionHistory[]
 }
 
+interface ScoreSummary {
+  totalAttempts: number
+  correctAnswers: number
+  accuracy: number
+}
+
 export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
@@ -39,6 +45,12 @@ export default function Home() {
   const [history, setHistory] = useState<ProblemHistoryEntry[]>([])
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
+  const [score, setScore] = useState<ScoreSummary>({
+    totalAttempts: 0,
+    correctAnswers: 0,
+    accuracy: 0
+  })
+  const [scoreError, setScoreError] = useState('')
 
   const feedbackCardStyles =
     isCorrect === null
@@ -77,9 +89,36 @@ export default function Home() {
     }
   }, [])
 
+  const fetchScore = useCallback(async () => {
+    try {
+      setScoreError('')
+      const response = await fetch('/api/math-problem/score')
+
+      if (!response.ok) {
+        throw new Error('Request failed')
+      }
+
+      const data = (await response.json()) as {
+        totalAttempts: number
+        correctAnswers: number
+        accuracy: number
+      }
+
+      setScore({
+        totalAttempts: data.totalAttempts ?? 0,
+        correctAnswers: data.correctAnswers ?? 0,
+        accuracy: data.accuracy ?? 0
+      })
+    } catch (error) {
+      console.error('Failed to load score:', error)
+      setScoreError('Unable to update score right now.')
+    }
+  }, [])
+
   useEffect(() => {
     fetchHistory()
-  }, [fetchHistory])
+    fetchScore()
+  }, [fetchHistory, fetchScore])
 
   const generateProblem = async () => {
     try {
@@ -110,6 +149,7 @@ export default function Home() {
       setProblem(data.problem)
       setSessionId(data.sessionId)
       fetchHistory()
+      fetchScore()
     } catch (error) {
       console.error('Failed to generate problem:', error)
       setProblem(null)
@@ -155,6 +195,7 @@ export default function Home() {
       setFeedback(data.feedback)
       setUserAnswer('')
       fetchHistory()
+      fetchScore()
     } catch (error) {
       console.error('Failed to submit answer:', error)
       setIsCorrect(null)
@@ -248,6 +289,41 @@ export default function Home() {
             <p className="text-gray-800 leading-relaxed">{feedback}</p>
           </div>
         )}
+
+        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">
+            Your score
+          </h2>
+          {scoreError && (
+            <p className="text-sm text-red-600 mb-2">{scoreError}</p>
+          )}
+          {score.totalAttempts === 0 ? (
+            <p className="text-gray-600">
+              No submissions yet. Try solving a problem to start scoring!
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 border border-gray-200 rounded-lg text-center">
+                <p className="text-sm text-gray-500">Total Attempts</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {score.totalAttempts}
+                </p>
+              </div>
+              <div className="p-4 border border-gray-200 rounded-lg text-center">
+                <p className="text-sm text-gray-500">Correct Answers</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {score.correctAnswers}
+                </p>
+              </div>
+              <div className="p-4 border border-gray-200 rounded-lg text-center">
+                <p className="text-sm text-gray-500">Accuracy</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {score.accuracy.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-700">
