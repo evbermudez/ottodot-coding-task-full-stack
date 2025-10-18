@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@supabase/supabase-js'
 
-const modelName = 'gemini-pro'
+const modelName = process.env.GOOGLE_MODEL_NAME ?? 'models/gemini-2.0-flash'
 const googleApiKey = process.env.GOOGLE_API_KEY
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const googleApiBase =
+  process.env.GOOGLE_API_BASE_URL ??
+  'https://generativelanguage.googleapis.com'
+const googleApiVersion = process.env.GOOGLE_API_VERSION ?? 'v1beta'
 
 if (!googleApiKey) {
   throw new Error('Missing GOOGLE_API_KEY environment variable')
@@ -15,7 +18,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-const genAI = new GoogleGenerativeAI(googleApiKey)
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 const parseJson = (raw: string) => {
@@ -30,28 +32,163 @@ const parseJson = (raw: string) => {
   }
 }
 
-export async function POST() {
-  try {
-    const model = genAI.getGenerativeModel({ model: modelName })
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [
+type GenerationMethod = 'generateContent' | 'generateMessage' | 'generateText'
+
+const buildRequestBody = (method: GenerationMethod, prompt: string) => {
+  switch (method) {
+    case 'generateContent':
+      return {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          candidateCount: 1
+        }
+      }
+    case 'generateMessage':
+      return {
+        prompt: {
+          messages: [
             {
-              text: [
-                'Create a Primary 5 level math word problem that aligns with the Singapore Mathematics syllabus.',
-                'Respond strictly as minified JSON with two properties: "problem_text" (string) and "final_answer" (number).',
-                'Ensure the problem requires at most two computation steps and has a final numerical answer.',
-                'Do not include any additional commentary, formatting, or markdown code fences.'
-              ].join(' ')
+              author: 'user',
+              content: prompt
             }
           ]
-        }
-      ]
-    })
+        },
+        temperature: 0.7,
+        candidateCount: 1
+      }
+    default:
+      return {
+        prompt: { text: prompt },
+        temperature: 0.7,
+        candidateCount: 1
+      }
+  }
+}
 
-    const textResponse = result.response.text()
+const extractCandidateText = (payload: any) => {
+  const candidates = Array.isArray(payload?.candidates)
+    ? payload.candidates
+    : []
+
+  for (const candidate of candidates) {
+    if (typeof candidate?.output === 'string') {
+      return candidate.output.trim()
+    }
+
+    if (typeof candidate?.content === 'string') {
+      return candidate.content.trim()
+    }
+
+    const parts = candidate?.content?.parts ?? candidate?.content ?? []
+    if (Array.isArray(parts)) {
+      for (const part of parts) {
+        if (typeof part?.text === 'string') {
+          return part.text.trim()
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+const generateText = async (prompt: string) => {
+  const modelPath = modelName.startsWith('models/')
+    ? modelName
+    : `models/${modelName}`
+
+  const versions = Array.from(
+    new Set([googleApiVersion, 'v1beta1', 'v1beta', 'v1'])
+  ).filter(Boolean)
+
+  const methods: GenerationMethod[] = [
+    'generateContent',
+    'generateMessage',
+    'generateText'
+  ]
+
+  let lastError: Error | null = null
+
+  for (const version of versions) {
+    for (const method of methods) {
+      const endpoint = `${googleApiBase}/${version}/${modelPath}:${method}?key=${googleApiKey}`
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(buildRequestBody(method, prompt))
+        })
+
+        const raw = await response.text()
+        let payload: any = null
+
+        if (raw) {
+          try {
+            payload = JSON.parse(raw)
+          } catch {
+            throw new Error(
+              `Failed to parse Google response for ${version}/${method}: ${raw}`
+            )
+          }
+        }
+
+        if (!response.ok) {
+          const message =
+            payload?.error?.message ??
+            (raw || `Model request failed with status ${response.status}`)
+
+          if (response.status === 404) {
+            lastError = new Error(
+              `[${version} ${method}] ${message} (endpoint: ${endpoint})`
+            )
+            continue
+          }
+
+          throw new Error(
+            `[${version} ${method}] ${message} (endpoint: ${endpoint})`
+          )
+        }
+
+        const text = extractCandidateText(payload)
+
+        if (!text) {
+          throw new Error(
+            `[${version} ${method}] Model response did not include text output${
+              raw ? `: ${raw}` : ''
+            }`
+          )
+        }
+
+        return text
+      } catch (error) {
+        lastError = error as Error
+      }
+    }
+  }
+
+  throw lastError ?? new Error('Unable to generate text with Google API')
+}
+
+export async function POST() {
+  try {
+    const textResponse = await generateText(
+      [
+        'Create a Primary 5 level math word problem that aligns with the Singapore Mathematics syllabus.',
+        'Respond strictly as minified JSON with two properties: "problem_text" (string) and "final_answer" (number).',
+        'Ensure the problem requires at most two computation steps and has a final numerical answer.',
+        'Do not include any additional commentary, formatting, or markdown code fences.'
+      ].join(' ')
+    )
+
     const parsed = parseJson(textResponse) as {
       problem_text: string
       final_answer: number
@@ -60,7 +197,8 @@ export async function POST() {
     if (
       !parsed ||
       typeof parsed.problem_text !== 'string' ||
-      (typeof parsed.final_answer !== 'number' && typeof parsed.final_answer !== 'string')
+      (typeof parsed.final_answer !== 'number' &&
+        typeof parsed.final_answer !== 'string')
     ) {
       throw new Error('AI response missing required fields')
     }

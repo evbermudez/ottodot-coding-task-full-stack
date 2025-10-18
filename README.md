@@ -140,9 +140,9 @@ When submitting your assessment, provide:
 
 ### My Implementation:
 
-- 
-- 
-- 
+- AI-powered generation via Gemini with strict JSON output parsing and validation to guarantee we always persist structured problems.
+- Sessions and submissions persisted in Supabase tables using server-side routes under `app/api/math-problem`.
+- Frontend wiring in `app/page.tsx` handles loading/error states, ties button actions to the API routes, and renders feedback with contextual styling.
 
 ## Additional Features (Optional)
 
