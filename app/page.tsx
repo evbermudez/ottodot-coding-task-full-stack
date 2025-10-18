@@ -6,6 +6,7 @@ interface MathProblem {
   problem_text: string
   final_answer: number
   difficulty: 'easy' | 'medium' | 'hard'
+  problem_type: 'mixed' | 'addition' | 'subtraction' | 'multiplication' | 'division'
 }
 
 interface SubmissionHistory {
@@ -20,6 +21,7 @@ interface ProblemHistoryEntry {
   id: string
   created_at: string
   difficulty: MathProblem['difficulty']
+  problem_type: MathProblem['problem_type']
   problem_text: string
   correct_answer: number
   math_problem_submissions: SubmissionHistory[]
@@ -30,6 +32,15 @@ interface ScoreSummary {
   correctAnswers: number
   accuracy: number
 }
+
+const DIFFICULTY_OPTIONS: MathProblem['difficulty'][] = ['easy', 'medium', 'hard']
+const PROBLEM_TYPE_OPTIONS: MathProblem['problem_type'][] = [
+  'mixed',
+  'addition',
+  'subtraction',
+  'multiplication',
+  'division'
+]
 
 export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null)
@@ -51,6 +62,9 @@ export default function Home() {
     accuracy: 0
   })
   const [scoreError, setScoreError] = useState('')
+  const [selectedProblemType, setSelectedProblemType] = useState<
+    MathProblem['problem_type']
+  >('mixed')
 
   const feedbackCardStyles =
     isCorrect === null
@@ -133,7 +147,8 @@ export default function Home() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          difficulty: selectedDifficulty
+          difficulty: selectedDifficulty,
+          problemType: selectedProblemType
         })
       })
 
@@ -213,26 +228,50 @@ export default function Home() {
         </h1>
         
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6 space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-3">
-              Choose difficulty
-            </h2>
-            <div className="grid grid-cols-3 gap-2">
-              {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
-                <button
-                  key={difficulty}
-                  type="button"
-                  onClick={() => setSelectedDifficulty(difficulty)}
-                  className={`py-2 rounded-lg border font-semibold capitalize transition ${
-                    selectedDifficulty === difficulty
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
-                  }`}
-                  disabled={isGenerating || isSubmitting}
-                >
-                  {difficulty}
-                </button>
-              ))}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 mb-3">
+                Choose difficulty
+              </h2>
+              <div className="grid grid-cols-3 gap-2">
+                {DIFFICULTY_OPTIONS.map((difficulty) => (
+                  <button
+                    key={difficulty}
+                    type="button"
+                    onClick={() => setSelectedDifficulty(difficulty)}
+                    className={`py-2 rounded-lg border font-semibold capitalize transition ${
+                      selectedDifficulty === difficulty
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                    }`}
+                    disabled={isGenerating || isSubmitting}
+                  >
+                    {difficulty}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 mb-3">
+                Choose problem type
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {PROBLEM_TYPE_OPTIONS.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setSelectedProblemType(type)}
+                    className={`py-2 rounded-lg border font-semibold capitalize transition ${
+                      selectedProblemType === type
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-md'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                    }`}
+                    disabled={isGenerating || isSubmitting}
+                  >
+                    {type === 'mixed' ? 'Any' : type}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <button
@@ -247,9 +286,16 @@ export default function Home() {
         {problem && (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-700">Problem:</h2>
-            <span className="inline-flex items-center px-3 py-1 mb-4 rounded-full text-sm font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
-              {problem.difficulty.toUpperCase()}
-            </span>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+                {problem.difficulty.toUpperCase()}
+              </span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wide bg-purple-50 text-purple-700 border border-purple-200">
+                {problem.problem_type === 'mixed'
+                  ? 'ANY OPERATION'
+                  : problem.problem_type.toUpperCase()}
+              </span>
+            </div>
             <p className="text-lg text-gray-800 leading-relaxed mb-6">
               {problem.problem_text}
             </p>
@@ -350,9 +396,16 @@ export default function Home() {
                     className="border border-gray-200 rounded-lg p-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
-                        {entry.difficulty.toUpperCase()}
-                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+                          {entry.difficulty.toUpperCase()}
+                        </span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-purple-50 text-purple-700 border border-purple-200">
+                          {entry.problem_type === 'mixed'
+                            ? 'ANY'
+                            : entry.problem_type.toUpperCase()}
+                        </span>
+                      </div>
                       <span className="text-sm text-gray-500">
                         {new Date(entry.created_at).toLocaleString()}
                       </span>

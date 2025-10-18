@@ -23,6 +23,15 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 const ALLOWED_DIFFICULTIES = ['easy', 'medium', 'hard'] as const
 type Difficulty = (typeof ALLOWED_DIFFICULTIES)[number]
 
+const ALLOWED_PROBLEM_TYPES = [
+  'mixed',
+  'addition',
+  'subtraction',
+  'multiplication',
+  'division'
+] as const
+type ProblemType = (typeof ALLOWED_PROBLEM_TYPES)[number]
+
 const difficultyGuidance: Record<Difficulty, string> = {
   easy:
     'The problem should involve simple operations (addition or subtraction within 2 digits) and be solvable in one clear step.',
@@ -30,6 +39,19 @@ const difficultyGuidance: Record<Difficulty, string> = {
     'The problem can involve multiplication or division and may require 2 computation steps while staying within familiar Primary 5 contexts.',
   hard:
     'The problem should require multi-step reasoning (up to 3 clear steps) potentially combining different operations while remaining appropriate for a strong Primary 5 student.'
+}
+
+const problemTypeGuidance: Record<ProblemType, string> = {
+  mixed:
+    'You may pick any operation that suits the scenario, but keep it coherent and relevant for Primary 5 students.',
+  addition:
+    'Ensure the scenario requires addition as the primary operation to reach the answer. Avoid other operation types.',
+  subtraction:
+    'Ensure the scenario requires subtraction as the primary operation to reach the answer. Avoid other operation types.',
+  multiplication:
+    'Ensure the scenario requires multiplication as the primary operation to reach the answer. Avoid other operation types.',
+  division:
+    'Ensure the scenario requires division as the primary operation to reach the answer. Avoid other operation types.'
 }
 
 const parseJson = (raw: string) => {
@@ -193,29 +215,39 @@ const generateText = async (prompt: string) => {
 export async function POST(request: Request) {
   try {
     let difficulty: Difficulty = 'medium'
+    let problemType: ProblemType = 'mixed'
+    let body: { difficulty?: string; problemType?: string } | null = null
 
-    try {
-      if (request.headers.get('content-type')?.includes('application/json')) {
-        const body = await request.json()
-        if (body?.difficulty && typeof body.difficulty === 'string') {
-          const lowered = body.difficulty.toLowerCase()
-          if (
-            ALLOWED_DIFFICULTIES.includes(lowered as Difficulty)
-          ) {
-            difficulty = lowered as Difficulty
-          }
-        }
+    if (request.headers.get('content-type')?.includes('application/json')) {
+      try {
+        body = await request.json()
+      } catch (parseError) {
+        console.warn('Unable to parse request body:', parseError)
       }
-    } catch (parseError) {
-      console.warn('Unable to parse request body for difficulty:', parseError)
+    }
+
+    if (body?.difficulty && typeof body.difficulty === 'string') {
+      const lowered = body.difficulty.toLowerCase()
+      if (ALLOWED_DIFFICULTIES.includes(lowered as Difficulty)) {
+        difficulty = lowered as Difficulty
+      }
+    }
+
+    if (body?.problemType && typeof body.problemType === 'string') {
+      const loweredType = body.problemType.toLowerCase()
+      if (ALLOWED_PROBLEM_TYPES.includes(loweredType as ProblemType)) {
+        problemType = loweredType as ProblemType
+      }
     }
 
     const difficultyInstructions = difficultyGuidance[difficulty]
+    const typeInstructions = problemTypeGuidance[problemType]
 
     const textResponse = await generateText(
       [
         'Create a Primary 5 level math word problem that aligns with the Singapore Mathematics syllabus.',
         `Adjust the problem difficulty to be ${difficulty.toUpperCase()} using this guidance: ${difficultyInstructions}`,
+        `The required operation type is ${problemType.toUpperCase()}. ${typeInstructions}`,
         'Respond strictly as minified JSON with two properties: "problem_text" (string) and "final_answer" (number).',
         'Ensure the problem requires at most two computation steps and has a final numerical answer.',
         'Do not include any additional commentary, formatting, or markdown code fences.'
@@ -245,10 +277,11 @@ export async function POST(request: Request) {
       .from('math_problem_sessions')
       .insert({
         difficulty,
+        problem_type: problemType,
         problem_text: parsed.problem_text.trim(),
         correct_answer: finalAnswer
       })
-      .select('id, problem_text, correct_answer, difficulty')
+      .select('id, problem_text, correct_answer, difficulty, problem_type')
       .single()
 
     if (error) {
@@ -260,7 +293,8 @@ export async function POST(request: Request) {
       problem: {
         problem_text: data.problem_text,
         final_answer: Number(data.correct_answer),
-        difficulty: data.difficulty
+        difficulty: data.difficulty,
+        problem_type: data.problem_type
       }
     })
   } catch (error) {

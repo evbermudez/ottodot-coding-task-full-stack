@@ -17,6 +17,7 @@ export type Database = {
           id: string
           created_at: string
           difficulty: string
+          problem_type: string
           problem_text: string
           correct_answer: number
         }
@@ -24,6 +25,7 @@ export type Database = {
           id?: string
           created_at?: string
           difficulty?: string
+          problem_type?: string
           problem_text: string
           correct_answer: number
         }
@@ -31,6 +33,7 @@ export type Database = {
           id?: string
           created_at?: string
           difficulty?: string
+          problem_type?: string
           problem_text?: string
           correct_answer?: number
         }

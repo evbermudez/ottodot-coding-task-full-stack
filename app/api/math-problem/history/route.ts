@@ -20,6 +20,7 @@ export async function GET() {
           created_at,
           difficulty,
           problem_text,
+          problem_type,
           correct_answer,
           math_problem_submissions (
             id,

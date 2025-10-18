@@ -146,6 +146,7 @@ When submitting your assessment, provide:
 - Added selectable difficulty levels (Easy/Medium/Hard) that flow from the UI through the AI prompt to Supabase storage, ensuring repeatable problem difficulty control.
 - Implemented a problem history view that surfaces the 20 most recent sessions alongside submission outcomes for quick review.
 - Score tracking summary card keeps a live total of attempts, correct answers, and accuracy, backed by a dedicated API endpoint.
+- Operation filters let users choose addition, subtraction, multiplication, division, or mixed problems; the selection is enforced by the AI prompt and stored with each session.
 
 ## Additional Features (Optional)
 
@@ -154,7 +155,7 @@ If you have time, consider adding:
 - [x] Difficulty levels (Easy/Medium/Hard)
 - [x] Problem history view
 - [x] Score tracking
-- [ ] Different problem types (addition, subtraction, multiplication, division)
+- [x] Different problem types (addition, subtraction, multiplication, division)
 - [ ] Hints system
 - [ ] Step-by-step solution explanations
 

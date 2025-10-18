@@ -3,12 +3,14 @@ CREATE TABLE IF NOT EXISTS math_problem_sessions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     difficulty TEXT NOT NULL DEFAULT 'medium',
+    problem_type TEXT NOT NULL DEFAULT 'mixed',
     problem_text TEXT NOT NULL,
     correct_answer NUMERIC NOT NULL
 );
 
 -- If the table already exists, run the following once to add the difficulty column:
 -- ALTER TABLE math_problem_sessions ADD COLUMN IF NOT EXISTS difficulty TEXT NOT NULL DEFAULT 'medium';
+-- ALTER TABLE math_problem_sessions ADD COLUMN IF NOT EXISTS problem_type TEXT NOT NULL DEFAULT 'mixed';
 
 -- Create math_problem_submissions table
 CREATE TABLE IF NOT EXISTS math_problem_submissions (
