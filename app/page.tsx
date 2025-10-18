@@ -428,11 +428,18 @@ export default function Home() {
                   onChange={(e) => setUserAnswer(e.target.value)}
                   className="flex-1 w-full px-5 py-3 border-2 border-indigo-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 text-lg"
                   placeholder="Type your answer here..."
+                  disabled={isCorrect || isSubmitting || isGenerating || isResetting}
                   required
                 />
                 <button
                   type="submit"
-                  disabled={!userAnswer || isSubmitting || isGenerating || isResetting}
+                  disabled={
+                    !userAnswer ||
+                    isSubmitting ||
+                    isGenerating ||
+                    isResetting ||
+                    isCorrect
+                  }
                   className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-400 text-white font-bold text-lg px-6 py-3 rounded-xl transition duration-200 ease-in-out shadow-md text-center"
                 >
                   {isSubmitting ? 'Checking...' : 'Check Answer'}
