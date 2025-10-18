@@ -72,7 +72,7 @@ const buildSolutionPrompt = (payload: {
     'Provide a step-by-step solution for the following Primary 5 math problem.',
     `Problem: "${problemText}".`,
     `Final answer: ${correctAnswer}.`,
-    'Return the response strictly as a JSON array of strings where each string is one concise step (do not include numbering or markdown).'
+    'Respond ONLY with a JSON array of strings. Do NOT wrap the output in code fences.'
   ].join(' ')
 }
 
@@ -278,8 +278,14 @@ export async function POST(request: Request) {
 
     let solutionSteps: string[] | null = null
     if (solutionStepsRaw) {
+      const cleanedSolution = solutionStepsRaw
+        .replace(/^```json\s*/i, '')
+        .replace(/^```/, '')
+        .replace(/```$/, '')
+        .trim()
+
       try {
-        const parsed = JSON.parse(solutionStepsRaw)
+        const parsed = JSON.parse(cleanedSolution)
         if (Array.isArray(parsed)) {
           solutionSteps = parsed
             .filter((step) => typeof step === 'string')
