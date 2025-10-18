@@ -11,21 +11,98 @@ export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
   const [feedback, setFeedback] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
 
+  const feedbackCardStyles =
+    isCorrect === null
+      ? 'bg-red-50 border-2 border-red-200'
+      : isCorrect
+        ? 'bg-green-50 border-2 border-green-200'
+        : 'bg-yellow-50 border-2 border-yellow-200'
+
+  const feedbackHeading =
+    isCorrect === null
+      ? '⚠️ Something went wrong'
+      : isCorrect
+        ? '✅ Correct!'
+        : '❌ Not quite right'
+
   const generateProblem = async () => {
-    // TODO: Implement problem generation logic
-    // This should call your API route to generate a new problem
-    // and save it to the database
+    try {
+      setIsGenerating(true)
+      setFeedback('')
+      setIsCorrect(null)
+      setUserAnswer('')
+
+      const response = await fetch('/api/math-problem', {
+        method: 'POST'
+      })
+
+      if (!response.ok) {
+        throw new Error('Request failed')
+      }
+
+      const data = (await response.json()) as {
+        sessionId: string
+        problem: MathProblem
+      }
+
+      setProblem(data.problem)
+      setSessionId(data.sessionId)
+    } catch (error) {
+      console.error('Failed to generate problem:', error)
+      setProblem(null)
+      setSessionId(null)
+      setFeedback('Unable to generate a problem right now. Please try again.')
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const submitAnswer = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement answer submission logic
-    // This should call your API route to check the answer,
-    // save the submission, and generate feedback
+    if (!sessionId) {
+      setFeedback('Please generate a problem before submitting an answer.')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setFeedback('')
+
+      const response = await fetch('/api/math-problem/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId,
+          userAnswer: Number(userAnswer)
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Request failed')
+      }
+
+      const data = (await response.json()) as {
+        isCorrect: boolean
+        feedback: string
+      }
+
+      setIsCorrect(data.isCorrect)
+      setFeedback(data.feedback)
+      setUserAnswer('')
+    } catch (error) {
+      console.error('Failed to submit answer:', error)
+      setIsCorrect(null)
+      setFeedback('Unable to submit your answer right now. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -38,10 +115,10 @@ export default function Home() {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <button
             onClick={generateProblem}
-            disabled={isLoading}
+            disabled={isGenerating || isSubmitting}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
           >
-            {isLoading ? 'Generating...' : 'Generate New Problem'}
+            {isGenerating ? 'Generating...' : 'Generate New Problem'}
           </button>
         </div>
 
@@ -70,19 +147,19 @@ export default function Home() {
               
               <button
                 type="submit"
-                disabled={!userAnswer || isLoading}
+                disabled={!userAnswer || isSubmitting || isGenerating}
                 className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
               >
-                Submit Answer
+                {isSubmitting ? 'Submitting...' : 'Submit Answer'}
               </button>
             </form>
           </div>
         )}
 
         {feedback && (
-          <div className={`rounded-lg shadow-lg p-6 ${isCorrect ? 'bg-green-50 border-2 border-green-200' : 'bg-yellow-50 border-2 border-yellow-200'}`}>
+          <div className={`rounded-lg shadow-lg p-6 ${feedbackCardStyles}`}>
             <h2 className="text-xl font-semibold mb-4 text-gray-700">
-              {isCorrect ? '✅ Correct!' : '❌ Not quite right'}
+              {feedbackHeading}
             </h2>
             <p className="text-gray-800 leading-relaxed">{feedback}</p>
           </div>
