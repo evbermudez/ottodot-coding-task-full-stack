@@ -86,6 +86,7 @@ export default function Home() {
   const [hint, setHint] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<
@@ -171,6 +172,34 @@ export default function Home() {
     fetchHistory()
     fetchScore()
   }, [fetchHistory, fetchScore])
+
+  const resetApp = async () => {
+    try {
+      setIsResetting(true)
+      const response = await fetch('/api/math-problem/reset', {
+        method: 'POST'
+      })
+
+      if (!response.ok) {
+        throw new Error('Request failed')
+      }
+
+      setProblem(null)
+      setUserAnswer('')
+      setFeedback('')
+      setHint('')
+      setSolutionSteps([])
+      setIsCorrect(null)
+      setSessionId(null)
+      setHistoryError('')
+      await Promise.all([fetchHistory(), fetchScore()])
+    } catch (error) {
+      console.error('Failed to reset data:', error)
+      setHistoryError('Unable to reset data right now. Please try again.')
+    } finally {
+      setIsResetting(false)
+    }
+  }
 
   const generateProblem = async () => {
     try {
@@ -272,12 +301,30 @@ export default function Home() {
         </h1>
         
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 space-y-6 border border-blue-100">
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-blue-700 flex items-center gap-2">
                 <span className="text-2xl">🎯</span> Pick your challenge
               </h2>
-              <div className="grid grid-cols-3 gap-3">
+              <p className="text-sm text-gray-500 mt-1">
+                Choose a difficulty and problem type, then generate a fresh question.
+              </p>
+            </div>
+            <button
+              onClick={resetApp}
+              disabled={isGenerating || isSubmitting || isResetting}
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-md"
+            >
+              {isResetting ? 'Resetting...' : '🔁 Reset Progress'}
+            </button>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2 pt-2">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Difficulty
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {DIFFICULTY_OPTIONS.map((difficulty) => (
                   <button
                     key={difficulty}
@@ -288,7 +335,7 @@ export default function Home() {
                         ? DIFFICULTY_THEME[difficulty].buttonActive
                         : DIFFICULTY_THEME[difficulty].buttonInactive
                     }`}
-                    disabled={isGenerating || isSubmitting}
+                    disabled={isGenerating || isSubmitting || isResetting}
                   >
                     {friendlyLabel(difficulty)}
                   </button>
@@ -296,21 +343,21 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-purple-700 mb-4 flex items-center gap-2">
-                <span className="text-2xl">🧮</span> Choose problem type
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Problem type
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {PROBLEM_TYPE_OPTIONS.map((type) => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setSelectedProblemType(type)}
-                    className={`py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
+                    className={`px-4 py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
                       selectedProblemType === type
                         ? 'bg-purple-500 text-white border-purple-500 shadow-lg scale-105'
                         : 'bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-400'
                     }`}
-                    disabled={isGenerating || isSubmitting}
+                    disabled={isGenerating || isSubmitting || isResetting}
                   >
                     {type === 'mixed' ? 'Surprise Me' : friendlyLabel(type)}
                   </button>
@@ -320,7 +367,7 @@ export default function Home() {
           </div>
           <button
             onClick={generateProblem}
-            disabled={isGenerating || isSubmitting}
+            disabled={isGenerating || isSubmitting || isResetting}
             className="w-full bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-extrabold text-lg py-4 px-6 rounded-2xl transition duration-200 ease-in-out transform hover:scale-[1.03] shadow-lg"
           >
             {isGenerating ? 'Generating...' : 'Generate New Problem'}
@@ -364,7 +411,7 @@ export default function Home() {
                 />
                 <button
                   type="submit"
-                  disabled={!userAnswer || isSubmitting || isGenerating}
+                disabled={!userAnswer || isSubmitting || isGenerating || isResetting}
                   className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-400 text-white font-bold text-lg px-6 py-3 rounded-xl transition duration-200 ease-in-out shadow-md"
                 >
                   {isSubmitting ? 'Checking...' : 'Check Answer'}
