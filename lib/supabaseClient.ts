@@ -46,6 +46,7 @@ export type Database = {
           is_correct: boolean
           feedback_text: string
           hint_text: string | null
+          solution_steps: string[] | null
         }
         Insert: {
           id?: string
@@ -54,6 +55,7 @@ export type Database = {
           is_correct: boolean
           feedback_text: string
           hint_text?: string | null
+          solution_steps?: string[] | null
         }
         Update: {
           id?: string
@@ -62,6 +64,7 @@ export type Database = {
           is_correct?: boolean
           feedback_text?: string
           hint_text?: string | null
+          solution_steps?: string[] | null
         }
       }
     }

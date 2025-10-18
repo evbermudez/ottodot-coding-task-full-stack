@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS math_problem_sessions (
 -- ALTER TABLE math_problem_sessions ADD COLUMN IF NOT EXISTS difficulty TEXT NOT NULL DEFAULT 'medium';
 -- ALTER TABLE math_problem_sessions ADD COLUMN IF NOT EXISTS problem_type TEXT NOT NULL DEFAULT 'mixed';
 -- ALTER TABLE math_problem_submissions ADD COLUMN IF NOT EXISTS hint_text TEXT;
+-- ALTER TABLE math_problem_submissions ADD COLUMN IF NOT EXISTS solution_steps JSONB;
 
 -- Create math_problem_submissions table
 CREATE TABLE IF NOT EXISTS math_problem_submissions (
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS math_problem_submissions (
     is_correct BOOLEAN NOT NULL,
     feedback_text TEXT NOT NULL,
     hint_text TEXT,
+    solution_steps JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

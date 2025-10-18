@@ -16,6 +16,7 @@ interface SubmissionHistory {
   is_correct: boolean
   feedback_text: string
   hint_text?: string | null
+  solution_steps?: string[] | null
 }
 
 interface ProblemHistoryEntry {
@@ -47,6 +48,7 @@ export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
   const [feedback, setFeedback] = useState('')
+  const [solutionSteps, setSolutionSteps] = useState<string[]>([])
   const [hint, setHint] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -140,6 +142,7 @@ export default function Home() {
     try {
       setIsGenerating(true)
       setFeedback('')
+      setSolutionSteps([])
       setHint('')
       setIsCorrect(null)
       setUserAnswer('')
@@ -208,11 +211,13 @@ export default function Home() {
         isCorrect: boolean
         feedback: string
         hint?: string
+        solutionSteps?: string[]
       }
 
       setIsCorrect(data.isCorrect)
       setFeedback(data.feedback)
       setHint(data.hint ?? '')
+      setSolutionSteps(data.solutionSteps ?? [])
       setUserAnswer('')
       fetchHistory()
       fetchScore()
@@ -350,6 +355,19 @@ export default function Home() {
           </div>
         )}
 
+        {solutionSteps.length > 0 && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mt-4 border border-slate-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">
+              Step-by-step solution
+            </h2>
+            <ol className="list-decimal list-inside space-y-2 text-gray-800">
+              {solutionSteps.map((step, index) => (
+                <li key={`${step}-${index}`}>{step}</li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-700">
             Your score
@@ -457,6 +475,19 @@ export default function Home() {
                             Hint: {latestSubmission.hint_text}
                           </p>
                         )}
+                        {latestSubmission.solution_steps &&
+                          latestSubmission.solution_steps.length > 0 && (
+                            <div className="mt-2 text-gray-700">
+                              <p className="font-semibold">Solution steps:</p>
+                              <ol className="list-decimal list-inside space-y-1 mt-1">
+                                {latestSubmission.solution_steps.map((step, idx) => (
+                                  <li key={`${latestSubmission.id}-step-${idx}`}>
+                                    {step}
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
                       </div>
                     ) : (
                       <p className="text-sm text-gray-500">

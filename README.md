@@ -148,6 +148,7 @@ When submitting your assessment, provide:
 - Score tracking summary card keeps a live total of attempts, correct answers, and accuracy, backed by a dedicated API endpoint.
 - Operation filters let users choose addition, subtraction, multiplication, division, or mixed problems; the selection is enforced by the AI prompt and stored with each session.
 - Added an AI-powered hint system that generates strategy-focused nudges stored with each submission and surfaced in the UI/history.
+- Generated step-by-step solutions stored with each submission, displayed to the learner and in the history view for review.
 
 ## Additional Features (Optional)
 
@@ -158,7 +159,7 @@ If you have time, consider adding:
 - [x] Score tracking
 - [x] Different problem types (addition, subtraction, multiplication, division)
 - [x] Hints system
-- [ ] Step-by-step solution explanations
+- [x] Step-by-step solution explanations
 
 ---
 

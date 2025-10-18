@@ -28,7 +28,8 @@ export async function GET() {
             user_answer,
             is_correct,
             feedback_text,
-            hint_text
+            hint_text,
+            solution_steps
           )
         `
       )

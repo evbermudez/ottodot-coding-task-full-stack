@@ -62,6 +62,20 @@ const buildHintPrompt = (payload: {
   ].join(' ')
 }
 
+const buildSolutionPrompt = (payload: {
+  problemText: string
+  correctAnswer: number
+}) => {
+  const { problemText, correctAnswer } = payload
+
+  return [
+    'Provide a step-by-step solution for the following Primary 5 math problem.',
+    `Problem: "${problemText}".`,
+    `Final answer: ${correctAnswer}.`,
+    'Return the response strictly as a JSON array of strings where each string is one concise step (do not include numbering or markdown).'
+  ].join(' ')
+}
+
 type GenerationMethod = 'generateContent' | 'generateMessage' | 'generateText'
 
 const buildRequestBody = (method: GenerationMethod, prompt: string) => {
@@ -238,7 +252,7 @@ export async function POST(request: Request) {
     const epsilon = 0.01
     const isCorrect = Math.abs(numericAnswer - correctAnswer) <= epsilon
 
-    const [feedbackText, hintText] = await Promise.all([
+    const [feedbackText, hintText, solutionStepsRaw] = await Promise.all([
       generateText(
         buildFeedbackPrompt({
           problemText: `${session.problem_text} (Difficulty: ${session.difficulty}, Type: ${session.problem_type})`,
@@ -253,8 +267,28 @@ export async function POST(request: Request) {
           correctAnswer,
           userAnswer: isCorrect ? undefined : numericAnswer
         })
+      ),
+      generateText(
+        buildSolutionPrompt({
+          problemText: session.problem_text,
+          correctAnswer
+        })
       )
     ])
+
+    let solutionSteps: string[] | null = null
+    if (solutionStepsRaw) {
+      try {
+        const parsed = JSON.parse(solutionStepsRaw)
+        if (Array.isArray(parsed)) {
+          solutionSteps = parsed
+            .filter((step) => typeof step === 'string')
+            .map((step) => step.trim())
+        }
+      } catch (error) {
+        console.warn('Failed to parse solution steps:', error, solutionStepsRaw)
+      }
+    }
 
     const { error: insertError } = await supabase
       .from('math_problem_submissions')
@@ -263,7 +297,8 @@ export async function POST(request: Request) {
         user_answer: numericAnswer,
         is_correct: isCorrect,
         feedback_text: feedbackText,
-        hint_text: hintText
+        hint_text: hintText,
+        solution_steps: solutionSteps
       })
 
     if (insertError) {
@@ -273,7 +308,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       isCorrect,
       feedback: feedbackText,
-      hint: hintText
+      hint: hintText,
+      solutionSteps: solutionSteps ?? []
     })
   } catch (error) {
     console.error('Error submitting answer:', error)
