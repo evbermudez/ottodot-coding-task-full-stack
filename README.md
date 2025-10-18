@@ -142,13 +142,14 @@ When submitting your assessment, provide:
 
 - AI-powered generation via Gemini with strict JSON output parsing and validation to guarantee we always persist structured problems.
 - Sessions and submissions persisted in Supabase tables using server-side routes under `app/api/math-problem`.
-- Frontend wiring in `app/page.tsx` handles loading/error states, ties button actions to the API routes, and renders feedback with contextual styling.
+- Frontend wiring uses modular components under `app/components` to keep the UI expressive for kids while wiring up loading/error states and feedback flows.
 - Added selectable difficulty levels (Easy/Medium/Hard) that flow from the UI through the AI prompt to Supabase storage, ensuring repeatable problem difficulty control.
 - Implemented a problem history view that surfaces the 20 most recent sessions alongside submission outcomes for quick review.
 - Score tracking summary card keeps a live total of attempts, correct answers, and accuracy, backed by a dedicated API endpoint.
 - Operation filters let users choose addition, subtraction, multiplication, division, or mixed problems; the selection is enforced by the AI prompt and stored with each session.
 - Added an AI-powered hint system that generates strategy-focused nudges stored with each submission and surfaced in the UI/history.
 - Generated step-by-step solutions stored with each submission, displayed to the learner and in the history view for review.
+- Introduced reset functionality to clear Supabase tables from the UI, plus responsive adjustments and emoji-based controls to keep things playful on mobile.
 
 ## Additional Features (Optional)
 
