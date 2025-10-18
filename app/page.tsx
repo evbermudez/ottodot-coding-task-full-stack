@@ -78,6 +78,20 @@ const DIFFICULTY_THEME: Record<
   }
 }
 
+const DIFFICULTY_ICON: Record<MathProblem['difficulty'], string> = {
+  easy: '🙂',
+  medium: '😎',
+  hard: '🚀'
+}
+
+const PROBLEM_TYPE_ICON: Record<MathProblem['problem_type'], string> = {
+  mixed: '🎲',
+  addition: '➕',
+  subtraction: '➖',
+  multiplication: '✖️',
+  division: '➗'
+}
+
 export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
@@ -302,7 +316,7 @@ export default function Home() {
         
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 space-y-6 border border-blue-100">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
+            <div className="flex-1">
               <h2 className="text-xl font-semibold text-blue-700 flex items-center gap-2">
                 <span className="text-2xl">🎯</span> Pick your challenge
               </h2>
@@ -320,24 +334,26 @@ export default function Home() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2 pt-2">
-            <div>
+            <div className="flex-1">
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 Difficulty
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {DIFFICULTY_OPTIONS.map((difficulty) => (
                   <button
                     key={difficulty}
                     type="button"
                     onClick={() => setSelectedDifficulty(difficulty)}
-                    className={`px-4 py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
+                    className={`flex-1 min-w-[150px] px-4 py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
                       selectedDifficulty === difficulty
                         ? DIFFICULTY_THEME[difficulty].buttonActive
                         : DIFFICULTY_THEME[difficulty].buttonInactive
                     }`}
                     disabled={isGenerating || isSubmitting || isResetting}
                   >
-                    {friendlyLabel(difficulty)}
+                    <span className="text-lg">
+                      {DIFFICULTY_ICON[difficulty]} {friendlyLabel(difficulty)}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -346,20 +362,23 @@ export default function Home() {
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 Problem type
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {PROBLEM_TYPE_OPTIONS.map((type) => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setSelectedProblemType(type)}
-                    className={`px-4 py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
+                    className={`flex-1 min-w-[150px] px-4 py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
                       selectedProblemType === type
                         ? 'bg-purple-500 text-white border-purple-500 shadow-lg scale-105'
                         : 'bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-400'
                     }`}
                     disabled={isGenerating || isSubmitting || isResetting}
                   >
-                    {type === 'mixed' ? 'Surprise Me' : friendlyLabel(type)}
+                    <span className="text-lg">
+                      {PROBLEM_TYPE_ICON[type]}{' '}
+                      {type === 'mixed' ? 'Surprise Me' : friendlyLabel(type)}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -381,11 +400,13 @@ export default function Home() {
             </h2>
             <div className="flex flex-wrap gap-2 mb-4">
               <span
-                className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide border ${DIFFICULTY_THEME[problem.difficulty].badge}`}
+                className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide border ${DIFFICULTY_THEME[problem.difficulty].badge}`}
               >
+                {DIFFICULTY_ICON[problem.difficulty]}
                 {problem.difficulty.toUpperCase()}
               </span>
-              <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
+                {PROBLEM_TYPE_ICON[problem.problem_type]}
                 {problem.problem_type === 'mixed'
                   ? 'ANY OPERATION'
                   : problem.problem_type.toUpperCase()}
@@ -525,11 +546,13 @@ export default function Home() {
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                       <div className="flex flex-wrap gap-2">
                         <span
-                          className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border ${DIFFICULTY_THEME[entry.difficulty].badge}`}
+                          className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border ${DIFFICULTY_THEME[entry.difficulty].badge}`}
                         >
+                          {DIFFICULTY_ICON[entry.difficulty]}
                           {entry.difficulty.toUpperCase()}
                         </span>
-                        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
+                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
+                          {PROBLEM_TYPE_ICON[entry.problem_type]}
                           {entry.problem_type === 'mixed'
                             ? 'ANY'
                             : entry.problem_type.toUpperCase()}
