@@ -45,6 +45,23 @@ const buildFeedbackPrompt = (payload: {
   ].join(' ')
 }
 
+const buildHintPrompt = (payload: {
+  problemText: string
+  correctAnswer: number
+  userAnswer?: number
+}) => {
+  const { problemText, correctAnswer, userAnswer } = payload
+
+  return [
+    'You are helping a Primary 5 student with a math word problem.',
+    `Problem: "${problemText}".`,
+    userAnswer !== undefined
+      ? `The student is currently at this answer: ${userAnswer}. Provide a helpful hint that nudges them towards the correct approach without giving away the final answer (${correctAnswer}).`
+      : 'Provide a helpful hint that nudges the student towards the correct approach without giving away the final answer.',
+    'Keep the hint to 2 sentences and focus on strategy rather than the final numeric solution.'
+  ].join(' ')
+}
+
 type GenerationMethod = 'generateContent' | 'generateMessage' | 'generateText'
 
 const buildRequestBody = (method: GenerationMethod, prompt: string) => {
@@ -221,14 +238,23 @@ export async function POST(request: Request) {
     const epsilon = 0.01
     const isCorrect = Math.abs(numericAnswer - correctAnswer) <= epsilon
 
-    const feedbackText = await generateText(
-      buildFeedbackPrompt({
-        problemText: `${session.problem_text} (Difficulty: ${session.difficulty}, Type: ${session.problem_type})`,
-        correctAnswer,
-        userAnswer: numericAnswer,
-        isCorrect
-      })
-    )
+    const [feedbackText, hintText] = await Promise.all([
+      generateText(
+        buildFeedbackPrompt({
+          problemText: `${session.problem_text} (Difficulty: ${session.difficulty}, Type: ${session.problem_type})`,
+          correctAnswer,
+          userAnswer: numericAnswer,
+          isCorrect
+        })
+      ),
+      generateText(
+        buildHintPrompt({
+          problemText: session.problem_text,
+          correctAnswer,
+          userAnswer: isCorrect ? undefined : numericAnswer
+        })
+      )
+    ])
 
     const { error: insertError } = await supabase
       .from('math_problem_submissions')
@@ -236,7 +262,8 @@ export async function POST(request: Request) {
         session_id: session.id,
         user_answer: numericAnswer,
         is_correct: isCorrect,
-        feedback_text: feedbackText
+        feedback_text: feedbackText,
+        hint_text: hintText
       })
 
     if (insertError) {
@@ -245,7 +272,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       isCorrect,
-      feedback: feedbackText
+      feedback: feedbackText,
+      hint: hintText
     })
   } catch (error) {
     console.error('Error submitting answer:', error)

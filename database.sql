@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS math_problem_sessions (
 -- If the table already exists, run the following once to add the difficulty column:
 -- ALTER TABLE math_problem_sessions ADD COLUMN IF NOT EXISTS difficulty TEXT NOT NULL DEFAULT 'medium';
 -- ALTER TABLE math_problem_sessions ADD COLUMN IF NOT EXISTS problem_type TEXT NOT NULL DEFAULT 'mixed';
+-- ALTER TABLE math_problem_submissions ADD COLUMN IF NOT EXISTS hint_text TEXT;
 
 -- Create math_problem_submissions table
 CREATE TABLE IF NOT EXISTS math_problem_submissions (
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS math_problem_submissions (
     user_answer NUMERIC NOT NULL,
     is_correct BOOLEAN NOT NULL,
     feedback_text TEXT NOT NULL,
+    hint_text TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

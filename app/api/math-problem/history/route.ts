@@ -27,7 +27,8 @@ export async function GET() {
             created_at,
             user_answer,
             is_correct,
-            feedback_text
+            feedback_text,
+            hint_text
           )
         `
       )

@@ -15,6 +15,7 @@ interface SubmissionHistory {
   user_answer: number
   is_correct: boolean
   feedback_text: string
+  hint_text?: string | null
 }
 
 interface ProblemHistoryEntry {
@@ -46,6 +47,7 @@ export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
   const [feedback, setFeedback] = useState('')
+  const [hint, setHint] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -138,6 +140,7 @@ export default function Home() {
     try {
       setIsGenerating(true)
       setFeedback('')
+      setHint('')
       setIsCorrect(null)
       setUserAnswer('')
 
@@ -204,10 +207,12 @@ export default function Home() {
       const data = (await response.json()) as {
         isCorrect: boolean
         feedback: string
+        hint?: string
       }
 
       setIsCorrect(data.isCorrect)
       setFeedback(data.feedback)
+      setHint(data.hint ?? '')
       setUserAnswer('')
       fetchHistory()
       fetchScore()
@@ -336,6 +341,15 @@ export default function Home() {
           </div>
         )}
 
+        {hint && (
+          <div className="bg-purple-50 border-2 border-purple-200 rounded-lg shadow-lg p-6 mt-4">
+            <h2 className="text-xl font-semibold mb-4 text-purple-700">
+              💡 Hint
+            </h2>
+            <p className="text-gray-800 leading-relaxed">{hint}</p>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-700">
             Your score
@@ -438,6 +452,11 @@ export default function Home() {
                         <p className="text-gray-600 mt-1">
                           {latestSubmission.feedback_text}
                         </p>
+                        {latestSubmission.hint_text && (
+                          <p className="text-purple-700 mt-1">
+                            Hint: {latestSubmission.hint_text}
+                          </p>
+                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-gray-500">
