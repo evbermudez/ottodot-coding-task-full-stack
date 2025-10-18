@@ -126,12 +126,12 @@ Create a new API route that handles:
 
 When submitting your assessment, provide:
 
-1. **GitHub Repository URL**: Make sure it's public
-2. **Live Demo URL**: Your Vercel deployment
+1. **GitHub Repository URL**: https://github.com/evbermudez/ottodot-coding-task-full-stack
+2. **Live Demo URL**: https://ottodot-coding-task-full-stack-git-main-eric-vincents-projects.vercel.app?_vercel_share=SMS1ltPdngNSLWY8ZkThcB89jhX2Enlj
 3. **Supabase Credentials**: Add these to your README for testing:
    ```
-   SUPABASE_URL: [Your Supabase Project URL]
-   SUPABASE_ANON_KEY: [Your Supabase Anon Key]
+   SUPABASE_URL: https://qinlfuuxvweeffjaivuw.supabase.co
+   SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbmxmdXV4dndlZWZmamFpdnV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3NTUyODAsImV4cCI6MjA3NjMzMTI4MH0.W96BRCIJzb0hHyIAkoipkfeamyGQw5t7Z7FutWojeHE
    ```
 
 ## Implementation Notes

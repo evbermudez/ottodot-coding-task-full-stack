@@ -420,20 +420,20 @@ export default function Home() {
               <label htmlFor="answer" className="block text-lg font-semibold text-gray-700">
                 Your Answer
               </label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <input
                   type="number"
                   id="answer"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  className="flex-1 px-5 py-3 border-2 border-indigo-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 text-lg"
+                  className="flex-1 w-full px-5 py-3 border-2 border-indigo-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 text-lg"
                   placeholder="Type your answer here..."
                   required
                 />
                 <button
                   type="submit"
-                disabled={!userAnswer || isSubmitting || isGenerating || isResetting}
-                  className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-400 text-white font-bold text-lg px-6 py-3 rounded-xl transition duration-200 ease-in-out shadow-md"
+                  disabled={!userAnswer || isSubmitting || isGenerating || isResetting}
+                  className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-400 text-white font-bold text-lg px-6 py-3 rounded-xl transition duration-200 ease-in-out shadow-md text-center"
                 >
                   {isSubmitting ? 'Checking...' : 'Check Answer'}
                 </button>
