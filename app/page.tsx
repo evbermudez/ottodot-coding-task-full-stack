@@ -44,6 +44,40 @@ const PROBLEM_TYPE_OPTIONS: MathProblem['problem_type'][] = [
   'division'
 ]
 
+const friendlyLabel = (label: string) =>
+  label.charAt(0).toUpperCase() + label.slice(1)
+
+const DIFFICULTY_THEME: Record<
+  MathProblem['difficulty'],
+  {
+    buttonActive: string
+    buttonInactive: string
+    badge: string
+  }
+> = {
+  easy: {
+    buttonActive:
+      'bg-emerald-400 text-white border-emerald-400 shadow-lg scale-105',
+    buttonInactive:
+      'bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300',
+    badge: 'bg-emerald-200 text-emerald-800 border-emerald-300'
+  },
+  medium: {
+    buttonActive:
+      'bg-amber-400 text-white border-amber-400 shadow-lg scale-105',
+    buttonInactive:
+      'bg-amber-100 text-amber-700 border-amber-200 hover:border-amber-300',
+    badge: 'bg-amber-200 text-amber-800 border-amber-300'
+  },
+  hard: {
+    buttonActive:
+      'bg-rose-500 text-white border-rose-500 shadow-lg scale-105',
+    buttonInactive:
+      'bg-rose-100 text-rose-700 border-rose-200 hover:border-rose-300',
+    badge: 'bg-rose-200 text-rose-800 border-rose-300'
+  }
+}
+
 export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
@@ -231,54 +265,54 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
-          Math Problem Generator
+    <div className="min-h-screen bg-white">
+      <main className="container mx-auto px-4 py-12 max-w-4xl">
+        <h1 className="text-5xl font-extrabold text-center mb-10 text-blue-800 tracking-tight drop-shadow-sm">
+          OttoDot Math Adventures
         </h1>
         
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 space-y-6 border border-blue-100">
+          <div className="grid gap-6 lg:grid-cols-2">
             <div>
-              <h2 className="text-lg font-semibold text-gray-700 mb-3">
-                Choose difficulty
+              <h2 className="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2">
+                <span className="text-2xl">🎯</span> Pick your challenge
               </h2>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 {DIFFICULTY_OPTIONS.map((difficulty) => (
                   <button
                     key={difficulty}
                     type="button"
                     onClick={() => setSelectedDifficulty(difficulty)}
-                    className={`py-2 rounded-lg border font-semibold capitalize transition ${
+                    className={`px-4 py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
                       selectedDifficulty === difficulty
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                        ? DIFFICULTY_THEME[difficulty].buttonActive
+                        : DIFFICULTY_THEME[difficulty].buttonInactive
                     }`}
                     disabled={isGenerating || isSubmitting}
                   >
-                    {difficulty}
+                    {friendlyLabel(difficulty)}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-700 mb-3">
-                Choose problem type
+              <h2 className="text-xl font-semibold text-purple-700 mb-4 flex items-center gap-2">
+                <span className="text-2xl">🧮</span> Choose problem type
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {PROBLEM_TYPE_OPTIONS.map((type) => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setSelectedProblemType(type)}
-                    className={`py-2 rounded-lg border font-semibold capitalize transition ${
+                    className={`py-3 rounded-xl border-2 font-semibold capitalize transition transform hover:-translate-y-1 ${
                       selectedProblemType === type
-                        ? 'bg-purple-600 text-white border-purple-600 shadow-md'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                        ? 'bg-purple-500 text-white border-purple-500 shadow-lg scale-105'
+                        : 'bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-400'
                     }`}
                     disabled={isGenerating || isSubmitting}
                   >
-                    {type === 'mixed' ? 'Any' : type}
+                    {type === 'mixed' ? 'Surprise Me' : friendlyLabel(type)}
                   </button>
                 ))}
               </div>
@@ -287,59 +321,62 @@ export default function Home() {
           <button
             onClick={generateProblem}
             disabled={isGenerating || isSubmitting}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
+            className="w-full bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-extrabold text-lg py-4 px-6 rounded-2xl transition duration-200 ease-in-out transform hover:scale-[1.03] shadow-lg"
           >
             {isGenerating ? 'Generating...' : 'Generate New Problem'}
           </button>
         </div>
 
         {problem && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">Problem:</h2>
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-indigo-100">
+            <h2 className="text-2xl font-semibold mb-5 text-indigo-700 flex items-center gap-2">
+              <span className="text-3xl">📝</span> Your math quest
+            </h2>
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+              <span
+                className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide border ${DIFFICULTY_THEME[problem.difficulty].badge}`}
+              >
                 {problem.difficulty.toUpperCase()}
               </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wide bg-purple-50 text-purple-700 border border-purple-200">
+              <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
                 {problem.problem_type === 'mixed'
                   ? 'ANY OPERATION'
                   : problem.problem_type.toUpperCase()}
-              </span>
-            </div>
-            <p className="text-lg text-gray-800 leading-relaxed mb-6">
+            </span>
+          </div>
+            <p className="text-2xl text-gray-900 leading-relaxed font-medium mb-6">
               {problem.problem_text}
             </p>
-            
-            <form onSubmit={submitAnswer} className="space-y-4">
-              <div>
-                <label htmlFor="answer" className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Answer:
-                </label>
+
+            <form onSubmit={submitAnswer} className="space-y-5">
+              <label htmlFor="answer" className="block text-lg font-semibold text-gray-700">
+                Your Answer
+              </label>
+              <div className="flex items-center gap-4">
                 <input
                   type="number"
                   id="answer"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your answer"
+                  className="flex-1 px-5 py-3 border-2 border-indigo-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 text-lg"
+                  placeholder="Type your answer here..."
                   required
                 />
+                <button
+                  type="submit"
+                  disabled={!userAnswer || isSubmitting || isGenerating}
+                  className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-400 text-white font-bold text-lg px-6 py-3 rounded-xl transition duration-200 ease-in-out shadow-md"
+                >
+                  {isSubmitting ? 'Checking...' : 'Check Answer'}
+                </button>
               </div>
-              
-              <button
-                type="submit"
-                disabled={!userAnswer || isSubmitting || isGenerating}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Answer'}
-              </button>
             </form>
           </div>
         )}
 
         {feedback && (
-          <div className={`rounded-lg shadow-lg p-6 ${feedbackCardStyles}`}>
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">
+          <div className={`rounded-2xl shadow-lg p-6 border ${feedbackCardStyles}`}>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
               {feedbackHeading}
             </h2>
             <p className="text-gray-800 leading-relaxed">{feedback}</p>
@@ -347,55 +384,64 @@ export default function Home() {
         )}
 
         {hint && (
-          <div className="bg-purple-50 border-2 border-purple-200 rounded-lg shadow-lg p-6 mt-4">
-            <h2 className="text-xl font-semibold mb-4 text-purple-700">
-              💡 Hint
+          <div className="bg-purple-50 border-2 border-purple-200 rounded-2xl shadow-lg p-6 mt-6">
+            <h2 className="text-2xl font-semibold mb-4 text-purple-700 flex items-center gap-2">
+              💡 Clever Clue
             </h2>
-            <p className="text-gray-800 leading-relaxed">{hint}</p>
+            <p className="text-gray-800 leading-relaxed text-lg">{hint}</p>
           </div>
         )}
 
         {solutionSteps.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mt-4 border border-slate-200">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">
-              Step-by-step solution
+          <div className="bg-white rounded-2xl shadow-lg p-6 mt-6 border border-slate-200">
+            <h2 className="text-2xl font-semibold mb-4 text-indigo-700 flex items-center gap-2">
+              🪜 Step-by-step solution
             </h2>
-            <ol className="list-decimal list-inside space-y-2 text-gray-800">
+            <ol className="list-decimal list-inside space-y-3 text-gray-800 text-lg">
               {solutionSteps.map((step, index) => (
-                <li key={`${step}-${index}`}>{step}</li>
+                <li key={`${step}-${index}`} className="bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-100">
+                  {step}
+                </li>
               ))}
             </ol>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
-            Your score
+
+        <div className="bg-white rounded-2xl shadow-lg p-6 mt-8 border border-emerald-100">
+          <h2 className="text-2xl font-semibold mb-4 text-emerald-700 flex items-center gap-2">
+            🏅 Your scorecard
           </h2>
           {scoreError && (
             <p className="text-sm text-red-600 mb-2">{scoreError}</p>
           )}
           {score.totalAttempts === 0 ? (
-            <p className="text-gray-600">
-              No submissions yet. Try solving a problem to start scoring!
+            <p className="text-gray-700 text-lg">
+              No submissions yet—solve your first challenge to start your streak!
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 border border-gray-200 rounded-lg text-center">
-                <p className="text-sm text-gray-500">Total Attempts</p>
-                <p className="text-2xl font-bold text-gray-800">
+              <div className="p-5 border-2 border-emerald-200 rounded-xl text-center bg-emerald-50">
+                <p className="text-sm text-emerald-700 uppercase tracking-wide">
+                  Total Attempts
+                </p>
+                <p className="text-3xl font-bold text-emerald-900">
                   {score.totalAttempts}
                 </p>
               </div>
-              <div className="p-4 border border-gray-200 rounded-lg text-center">
-                <p className="text-sm text-gray-500">Correct Answers</p>
-                <p className="text-2xl font-bold text-green-600">
+              <div className="p-5 border-2 border-emerald-200 rounded-xl text-center bg-emerald-50">
+                <p className="text-sm text-emerald-700 uppercase tracking-wide">
+                  Correct Answers
+                </p>
+                <p className="text-3xl font-bold text-emerald-900">
                   {score.correctAnswers}
                 </p>
               </div>
-              <div className="p-4 border border-gray-200 rounded-lg text-center">
-                <p className="text-sm text-gray-500">Accuracy</p>
-                <p className="text-2xl font-bold text-blue-600">
+              <div className="p-5 border-2 border-emerald-200 rounded-xl text-center bg-emerald-50">
+                <p className="text-sm text-emerald-700 uppercase tracking-wide">
+                  Accuracy
+                </p>
+                <p className="text-3xl font-bold text-emerald-900">
                   {score.accuracy.toFixed(1)}%
                 </p>
               </div>
@@ -403,9 +449,9 @@ export default function Home() {
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
-            Problem history
+        <div className="bg-white rounded-2xl shadow-lg p-6 mt-8 border border-orange-100">
+          <h2 className="text-2xl font-semibold mb-4 text-orange-600 flex items-center gap-2">
+            📚 Problem history
           </h2>
 
           {historyError && (
@@ -413,10 +459,12 @@ export default function Home() {
           )}
 
           {isHistoryLoading ? (
-            <p className="text-gray-600">Loading history...</p>
+            <p className="text-gray-700 text-lg flex items-center gap-2">
+              <span className="animate-spin">⏳</span> Loading history...
+            </p>
           ) : history.length === 0 ? (
-            <p className="text-gray-600">
-              No problems generated yet. Generate one to see it here.
+            <p className="text-gray-700 text-lg">
+              No problems yet—tap “Generate New Problem” to start building your story!
             </p>
           ) : (
             <ul className="space-y-4">
@@ -425,14 +473,16 @@ export default function Home() {
                 return (
                   <li
                     key={entry.id}
-                    className="border border-gray-200 rounded-lg p-4"
+                    className="border-2 border-orange-200 rounded-xl p-5 bg-orange-50 shadow-sm"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                       <div className="flex flex-wrap gap-2">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+                        <span
+                          className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border ${DIFFICULTY_THEME[entry.difficulty].badge}`}
+                        >
                           {entry.difficulty.toUpperCase()}
                         </span>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-purple-50 text-purple-700 border border-purple-200">
+                        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
                           {entry.problem_type === 'mixed'
                             ? 'ANY'
                             : entry.problem_type.toUpperCase()}
@@ -443,23 +493,26 @@ export default function Home() {
                       </span>
                     </div>
 
-                    <p className="text-gray-800 font-semibold mb-2">
+                    <p className="text-gray-900 font-semibold text-lg mb-2">
                       {entry.problem_text}
                     </p>
 
-                    <p className="text-sm text-gray-600 mb-2">
-                      Correct answer: <span className="font-semibold">{entry.correct_answer}</span>
+                    <p className="text-sm text-gray-700 mb-2">
+                      Correct answer:{' '}
+                      <span className="font-bold text-gray-900">
+                        {entry.correct_answer}
+                      </span>
                     </p>
 
                     {latestSubmission ? (
-                      <div
-                        className={`text-sm ${
-                          latestSubmission.is_correct
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}
-                      >
-                        <p className="font-semibold">
+                      <div>
+                        <p
+                          className={`text-sm font-semibold ${
+                            latestSubmission.is_correct
+                              ? 'text-emerald-700'
+                              : 'text-rose-600'
+                          }`}
+                        >
                           {latestSubmission.is_correct
                             ? 'Answered correctly'
                             : 'Answered incorrectly'}

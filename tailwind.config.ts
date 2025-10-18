@@ -6,6 +6,13 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    {
+      pattern:
+        /(bg|text|border)-(emerald|amber|rose)-(50|100|200|300|400|500|700|800)/,
+      variants: ['hover'],
+    },
+  ],
   theme: {
     extend: {
       backgroundImage: {
