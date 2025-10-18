@@ -16,18 +16,21 @@ export type Database = {
         Row: {
           id: string
           created_at: string
+          difficulty: string
           problem_text: string
           correct_answer: number
         }
         Insert: {
           id?: string
           created_at?: string
+          difficulty?: string
           problem_text: string
           correct_answer: number
         }
         Update: {
           id?: string
           created_at?: string
+          difficulty?: string
           problem_text?: string
           correct_answer?: number
         }

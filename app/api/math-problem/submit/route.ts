@@ -206,7 +206,7 @@ export async function POST(request: Request) {
 
     const { data: session, error: sessionError } = await supabase
       .from('math_problem_sessions')
-      .select('id, problem_text, correct_answer')
+      .select('id, problem_text, correct_answer, difficulty')
       .eq('id', sessionId)
       .single()
 
@@ -223,7 +223,7 @@ export async function POST(request: Request) {
 
     const feedbackText = await generateText(
       buildFeedbackPrompt({
-        problemText: session.problem_text,
+        problemText: `${session.problem_text} (Difficulty: ${session.difficulty})`,
         correctAnswer,
         userAnswer: numericAnswer,
         isCorrect

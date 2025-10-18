@@ -20,6 +20,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+const ALLOWED_DIFFICULTIES = ['easy', 'medium', 'hard'] as const
+type Difficulty = (typeof ALLOWED_DIFFICULTIES)[number]
+
+const difficultyGuidance: Record<Difficulty, string> = {
+  easy:
+    'The problem should involve simple operations (addition or subtraction within 2 digits) and be solvable in one clear step.',
+  medium:
+    'The problem can involve multiplication or division and may require 2 computation steps while staying within familiar Primary 5 contexts.',
+  hard:
+    'The problem should require multi-step reasoning (up to 3 clear steps) potentially combining different operations while remaining appropriate for a strong Primary 5 student.'
+}
+
 const parseJson = (raw: string) => {
   try {
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
@@ -178,11 +190,32 @@ const generateText = async (prompt: string) => {
   throw lastError ?? new Error('Unable to generate text with Google API')
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    let difficulty: Difficulty = 'medium'
+
+    try {
+      if (request.headers.get('content-type')?.includes('application/json')) {
+        const body = await request.json()
+        if (body?.difficulty && typeof body.difficulty === 'string') {
+          const lowered = body.difficulty.toLowerCase()
+          if (
+            ALLOWED_DIFFICULTIES.includes(lowered as Difficulty)
+          ) {
+            difficulty = lowered as Difficulty
+          }
+        }
+      }
+    } catch (parseError) {
+      console.warn('Unable to parse request body for difficulty:', parseError)
+    }
+
+    const difficultyInstructions = difficultyGuidance[difficulty]
+
     const textResponse = await generateText(
       [
         'Create a Primary 5 level math word problem that aligns with the Singapore Mathematics syllabus.',
+        `Adjust the problem difficulty to be ${difficulty.toUpperCase()} using this guidance: ${difficultyInstructions}`,
         'Respond strictly as minified JSON with two properties: "problem_text" (string) and "final_answer" (number).',
         'Ensure the problem requires at most two computation steps and has a final numerical answer.',
         'Do not include any additional commentary, formatting, or markdown code fences.'
@@ -211,10 +244,11 @@ export async function POST() {
     const { data, error } = await supabase
       .from('math_problem_sessions')
       .insert({
+        difficulty,
         problem_text: parsed.problem_text.trim(),
         correct_answer: finalAnswer
       })
-      .select('id, problem_text, correct_answer')
+      .select('id, problem_text, correct_answer, difficulty')
       .single()
 
     if (error) {
@@ -225,7 +259,8 @@ export async function POST() {
       sessionId: data.id,
       problem: {
         problem_text: data.problem_text,
-        final_answer: Number(data.correct_answer)
+        final_answer: Number(data.correct_answer),
+        difficulty: data.difficulty
       }
     })
   } catch (error) {

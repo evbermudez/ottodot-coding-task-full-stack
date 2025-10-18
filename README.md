@@ -143,12 +143,13 @@ When submitting your assessment, provide:
 - AI-powered generation via Gemini with strict JSON output parsing and validation to guarantee we always persist structured problems.
 - Sessions and submissions persisted in Supabase tables using server-side routes under `app/api/math-problem`.
 - Frontend wiring in `app/page.tsx` handles loading/error states, ties button actions to the API routes, and renders feedback with contextual styling.
+- Added selectable difficulty levels (Easy/Medium/Hard) that flow from the UI through the AI prompt to Supabase storage, ensuring repeatable problem difficulty control.
 
 ## Additional Features (Optional)
 
 If you have time, consider adding:
 
-- [ ] Difficulty levels (Easy/Medium/Hard)
+- [x] Difficulty levels (Easy/Medium/Hard)
 - [ ] Problem history view
 - [ ] Score tracking
 - [ ] Different problem types (addition, subtraction, multiplication, division)
