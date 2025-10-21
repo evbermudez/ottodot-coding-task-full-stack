@@ -10,6 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const { count: totalAttempts, error: totalError } = await supabase
