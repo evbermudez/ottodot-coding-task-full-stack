@@ -43,7 +43,9 @@ export default function Home() {
       setIsHistoryLoading(true)
       setHistoryError('')
 
-      const response = await fetch('/api/math-problem/history')
+      const response = await fetch('/api/math-problem/history', {
+        cache: 'no-store'
+      })
       if (!response.ok) {
         throw new Error('Request failed')
       }
@@ -64,7 +66,9 @@ export default function Home() {
   const fetchScore = useCallback(async () => {
     try {
       setScoreError('')
-      const response = await fetch('/api/math-problem/score')
+      const response = await fetch('/api/math-problem/score', {
+        cache: 'no-store'
+      })
 
       if (!response.ok) {
         throw new Error('Request failed')
